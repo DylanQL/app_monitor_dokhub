@@ -30,6 +30,7 @@ class UserRecord {
   const UserRecord({
     required this.username,
     required this.bloqueado,
+    required this.usado,
     required this.fechaInicio,
     required this.fechaFin,
     required this.horasRealizadas,
@@ -39,6 +40,7 @@ class UserRecord {
 
   final String username;
   final bool bloqueado;
+  final bool usado;
   final String? fechaInicio;
   final String? fechaFin;
   final String? horasRealizadas;
@@ -48,6 +50,7 @@ class UserRecord {
   factory UserRecord.fromJson(Map<String, dynamic> json) => UserRecord(
         username: '${json['username'] ?? 'Sin nombre'}',
         bloqueado: _asBool(json['bloqueado']),
+        usado: _asBool(json['usado']),
         fechaInicio: _asNullableString(json['fecha_inicio']),
         fechaFin: _asNullableString(json['fecha_fin']),
         horasRealizadas: _asNullableString(json['horas_realizadas']),
@@ -68,7 +71,7 @@ class UserRecord {
       value == null ? null : value.toString();
 }
 
-enum UserFilter { todos, usados, bloqueados, disponibles }
+enum UserFilter { todos, enUso, cuentasUsadas, bloqueados, disponibles }
 
 class UsersPage extends StatefulWidget {
   const UsersPage({super.key});
@@ -128,7 +131,8 @@ class _UsersPageState extends State<UsersPage> {
     return _users.where((user) {
       final matchesFilter = switch (_filter) {
         UserFilter.todos => true,
-        UserFilter.usados => user.enUso,
+        UserFilter.enUso => user.enUso,
+        UserFilter.cuentasUsadas => user.usado,
         UserFilter.bloqueados => user.bloqueado,
         UserFilter.disponibles => !user.enUso && !user.bloqueado,
       };
@@ -138,7 +142,8 @@ class _UsersPageState extends State<UsersPage> {
 
   int _count(UserFilter filter) => _users.where((u) => switch (filter) {
         UserFilter.todos => true,
-        UserFilter.usados => u.enUso,
+        UserFilter.enUso => u.enUso,
+        UserFilter.cuentasUsadas => u.usado,
         UserFilter.bloqueados => u.bloqueado,
         UserFilter.disponibles => !u.enUso && !u.bloqueado,
       }).length;
@@ -244,6 +249,7 @@ class _UsersPageState extends State<UsersPage> {
 
   Widget _summary() {
     final blocked = _count(UserFilter.bloqueados);
+    final usedAccounts = _count(UserFilter.cuentasUsadas);
     final inUseUsers = _users.where((user) => user.enUso).toList();
     final available = _count(UserFilter.disponibles);
     final hasDuplicateInUse = inUseUsers.length > 1;
@@ -258,10 +264,11 @@ class _UsersPageState extends State<UsersPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 22),
       child: LayoutBuilder(builder: (context, box) {
-        final compact = box.maxWidth < 460;
+        final compact = box.maxWidth < 800;
         final cards = [
           _SummaryCard(label: 'Total usuarios', value: '${_users.length}', icon: Icons.people_alt_outlined, color: blue),
           _SummaryCard(label: 'Disponibles', value: '$available', icon: Icons.check_circle_outline_rounded, color: const Color(0xFF23A26D)),
+          _SummaryCard(label: 'Cuentas usadas', value: '$usedAccounts', icon: Icons.history_rounded, color: const Color(0xFF7B61C9)),
           _SummaryCard(
             label: inUseLabel,
             value: inUseValue,
@@ -274,7 +281,11 @@ class _UsersPageState extends State<UsersPage> {
         if (compact) {
           return Column(children: [for (var i = 0; i < cards.length; i += 2) Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: Row(children: [Expanded(child: cards[i]), const SizedBox(width: 10), Expanded(child: cards[i + 1])]),
+            child: Row(children: [
+              Expanded(child: cards[i]),
+              const SizedBox(width: 10),
+              Expanded(child: i + 1 < cards.length ? cards[i + 1] : const SizedBox.shrink()),
+            ]),
           )]);
         }
         return Row(children: [for (var i = 0; i < cards.length; i++) ...[
@@ -307,7 +318,8 @@ class _UsersPageState extends State<UsersPage> {
             scrollDirection: Axis.horizontal,
             child: Row(children: [
               _filterChip('Todos', UserFilter.todos),
-              _filterChip('En uso', UserFilter.usados),
+              _filterChip('En uso', UserFilter.enUso),
+              _filterChip('Cuentas usadas', UserFilter.cuentasUsadas),
               _filterChip('Bloqueados', UserFilter.bloqueados),
               _filterChip('Disponibles', UserFilter.disponibles),
             ]),
