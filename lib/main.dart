@@ -107,6 +107,22 @@ class _UsersPageState extends State<UsersPage> {
     }
   }
 
+  String get _systemLabel {
+    if (_loading) return 'Comprobando';
+    if (_error != null) return 'Sin conexión';
+    if (_users.isEmpty) return 'Sin usuarios';
+    final allUnavailable = _users.every((user) => user.usado || user.bloqueado);
+    return allUnavailable ? 'Sistema caído' : 'Sistema activo';
+  }
+
+  Color get _systemColor {
+    if (_loading || (_error == null && _users.isEmpty)) return muted;
+    if (_error != null || _systemLabel == 'Sistema caído') {
+      return const Color(0xFFE05B62);
+    }
+    return const Color(0xFF218456);
+  }
+
   List<UserRecord> get _filteredUsers {
     return _users.where((user) {
       final matchesFilter = switch (_filter) {
@@ -189,11 +205,18 @@ class _UsersPageState extends State<UsersPage> {
           const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-            decoration: BoxDecoration(color: const Color(0xFFEAF8F0), borderRadius: BorderRadius.circular(30)),
+            decoration: BoxDecoration(
+              color: _systemColor.withValues(alpha: .10),
+              borderRadius: BorderRadius.circular(30),
+            ),
             child: Row(children: [
-              Container(width: 7, height: 7, decoration: const BoxDecoration(color: Color(0xFF27AE70), shape: BoxShape.circle)),
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(color: _systemColor, shape: BoxShape.circle),
+              ),
               const SizedBox(width: 7),
-              const Text('Sistema activo', style: TextStyle(color: Color(0xFF218456), fontSize: 12, fontWeight: FontWeight.w600)),
+              Text(_systemLabel, style: TextStyle(color: _systemColor, fontSize: 12, fontWeight: FontWeight.w600)),
             ]),
           ),
         ]),
