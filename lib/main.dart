@@ -281,7 +281,8 @@ class _UsersPageState extends State<UsersPage> {
             icon: hasDuplicateInUse ? Icons.error_outline_rounded : Icons.schedule_rounded,
             color: hasDuplicateInUse ? const Color(0xFFE05B62) : const Color(0xFFEC9B32),
             valueColor: hasDuplicateInUse ? const Color(0xFFE05B62) : ink,
-            selected: false,
+            selected: _filter == UserFilter.enUso,
+            onTap: () => setState(() => _filter = UserFilter.enUso),
           ),
           _SummaryCard(label: 'Bloqueados', value: '$blocked', icon: Icons.block_rounded, color: const Color(0xFFE05B62), selected: _filter == UserFilter.bloqueados, onTap: () => setState(() => _filter = UserFilter.bloqueados)),
         ];
