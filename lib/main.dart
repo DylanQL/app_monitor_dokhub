@@ -412,7 +412,19 @@ class UserCard extends StatelessWidget {
             : ('Disponible', const Color(0xFF23A26D), Icons.check_circle_outline_rounded);
     return Container(
       padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFEBEFF5)), boxShadow: const [BoxShadow(color: Color(0x080E1A2E), blurRadius: 14, offset: Offset(0, 4))]),
+      decoration: BoxDecoration(
+        color: statusColor.withValues(alpha: .025),
+        borderRadius: BorderRadius.circular(17),
+        border: Border(
+          left: BorderSide(color: statusColor.withValues(alpha: .55), width: 3),
+          top: BorderSide(color: statusColor.withValues(alpha: .55)),
+          right: BorderSide(color: statusColor.withValues(alpha: .55)),
+          bottom: BorderSide(color: statusColor.withValues(alpha: .55)),
+        ),
+        boxShadow: const [
+          BoxShadow(color: Color(0x080E1A2E), blurRadius: 14, offset: Offset(0, 4)),
+        ],
+      ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Container(width: 43, height: 43, decoration: BoxDecoration(color: const Color(0xFFEAF0FF), borderRadius: BorderRadius.circular(14)), child: Center(child: Text(user.username.isEmpty ? '?' : user.username[0].toUpperCase(), style: const TextStyle(color: blue, fontSize: 18, fontWeight: FontWeight.w800)))),
