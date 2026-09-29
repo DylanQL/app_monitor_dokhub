@@ -64,6 +64,12 @@ class UserRecord {
       fechaInicio != null && fechaInicio!.trim().isNotEmpty &&
       (fechaFin == null || fechaFin!.trim().isEmpty);
 
+  bool get disponible =>
+      !usado &&
+      !bloqueado &&
+      (fechaInicio == null || fechaInicio!.trim().isEmpty) &&
+      (fechaFin == null || fechaFin!.trim().isEmpty);
+
   static bool _asBool(dynamic value) =>
       value == true || value?.toString().toLowerCase() == 'true';
 
@@ -134,7 +140,7 @@ class _UsersPageState extends State<UsersPage> {
         UserFilter.enUso => user.enUso,
         UserFilter.cuentasUsadas => user.usado,
         UserFilter.bloqueados => user.bloqueado,
-        UserFilter.disponibles => !user.enUso && !user.bloqueado,
+        UserFilter.disponibles => user.disponible,
       };
       return matchesFilter && user.username.toLowerCase().contains(_search.toLowerCase());
     }).toList();
@@ -145,7 +151,7 @@ class _UsersPageState extends State<UsersPage> {
         UserFilter.enUso => u.enUso,
         UserFilter.cuentasUsadas => u.usado,
         UserFilter.bloqueados => u.bloqueado,
-        UserFilter.disponibles => !u.enUso && !u.bloqueado,
+        UserFilter.disponibles => u.disponible,
       }).length;
 
   @override
@@ -409,7 +415,11 @@ class UserCard extends StatelessWidget {
         ? ('Bloqueado', const Color(0xFFE05B62), Icons.block_rounded)
         : user.enUso
             ? ('En uso', const Color(0xFFEC9B32), Icons.schedule_rounded)
-            : ('Disponible', const Color(0xFF23A26D), Icons.check_circle_outline_rounded);
+            : user.usado
+                ? ('Usada', const Color(0xFF7B61C9), Icons.task_alt_rounded)
+                : user.disponible
+                    ? ('Disponible', const Color(0xFF23A26D), Icons.check_circle_outline_rounded)
+                    : ('No disponible', const Color(0xFF718096), Icons.remove_circle_outline_rounded);
     return Container(
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
