@@ -272,17 +272,18 @@ class _UsersPageState extends State<UsersPage> {
       child: LayoutBuilder(builder: (context, box) {
         final compact = box.maxWidth < 800;
         final cards = [
-          _SummaryCard(label: 'Total usuarios', value: '${_users.length}', icon: Icons.people_alt_outlined, color: blue),
-          _SummaryCard(label: 'Disponibles', value: '$available', icon: Icons.check_circle_outline_rounded, color: const Color(0xFF23A26D)),
-          _SummaryCard(label: 'Cuentas usadas', value: '$usedAccounts', icon: Icons.history_rounded, color: const Color(0xFF7B61C9)),
+          _SummaryCard(label: 'Total usuarios', value: '${_users.length}', icon: Icons.people_alt_outlined, color: blue, selected: _filter == UserFilter.todos, onTap: () => setState(() => _filter = UserFilter.todos)),
+          _SummaryCard(label: 'Disponibles', value: '$available', icon: Icons.check_circle_outline_rounded, color: const Color(0xFF23A26D), selected: _filter == UserFilter.disponibles, onTap: () => setState(() => _filter = UserFilter.disponibles)),
+          _SummaryCard(label: 'Cuentas usadas', value: '$usedAccounts', icon: Icons.history_rounded, color: const Color(0xFF7B61C9), selected: _filter == UserFilter.cuentasUsadas, onTap: () => setState(() => _filter = UserFilter.cuentasUsadas)),
           _SummaryCard(
             label: inUseLabel,
             value: inUseValue,
             icon: hasDuplicateInUse ? Icons.error_outline_rounded : Icons.schedule_rounded,
             color: hasDuplicateInUse ? const Color(0xFFE05B62) : const Color(0xFFEC9B32),
             valueColor: hasDuplicateInUse ? const Color(0xFFE05B62) : ink,
+            selected: false,
           ),
-          _SummaryCard(label: 'Bloqueados', value: '$blocked', icon: Icons.block_rounded, color: const Color(0xFFE05B62)),
+          _SummaryCard(label: 'Bloqueados', value: '$blocked', icon: Icons.block_rounded, color: const Color(0xFFE05B62), selected: _filter == UserFilter.bloqueados, onTap: () => setState(() => _filter = UserFilter.bloqueados)),
         ];
         if (compact) {
           return Column(children: [for (var i = 0; i < cards.length; i += 2) Padding(
@@ -319,41 +320,11 @@ class _UsersPageState extends State<UsersPage> {
               ),
             ),
           ),
-          const SizedBox(height: 14),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(children: [
-              _filterChip('Todos', UserFilter.todos),
-              _filterChip('En uso', UserFilter.enUso),
-              _filterChip('Cuentas usadas', UserFilter.cuentasUsadas),
-              _filterChip('Bloqueados', UserFilter.bloqueados),
-              _filterChip('Disponibles', UserFilter.disponibles),
-            ]),
-          ),
           const SizedBox(height: 12),
           Text('${_filteredUsers.length} ${_filteredUsers.length == 1 ? 'usuario' : 'usuarios'}',
               style: const TextStyle(color: muted, fontSize: 12, fontWeight: FontWeight.w600)),
         ]),
       );
-
-  Widget _filterChip(String label, UserFilter filter) {
-    final selected = _filter == filter;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text('$label  ${_count(filter)}'),
-        selected: selected,
-        onSelected: (_) => setState(() => _filter = filter),
-        showCheckmark: false,
-        labelStyle: TextStyle(color: selected ? Colors.white : muted, fontSize: 12, fontWeight: FontWeight.w600),
-        backgroundColor: Colors.white,
-        selectedColor: ink,
-        side: BorderSide(color: selected ? ink : const Color(0xFFE7EBF1)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
-      ),
-    );
-  }
 
   Widget _errorView() => Center(
         child: Padding(
@@ -383,17 +354,22 @@ class _UsersPageState extends State<UsersPage> {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.label, required this.value, required this.icon, required this.color, this.valueColor = ink});
+  const _SummaryCard({required this.label, required this.value, required this.icon, required this.color, this.valueColor = ink, this.selected = false, this.onTap});
   final String label;
   final String value;
   final IconData icon;
   final Color color;
   final Color valueColor;
+  final bool selected;
+  final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(15),
+        child: Container(
         padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: const Color(0xFFEBEFF5))),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: selected ? color : const Color(0xFFEBEFF5), width: selected ? 2 : 1)),
         child: Row(children: [
           Container(width: 36, height: 36, decoration: BoxDecoration(color: color.withValues(alpha: .1), borderRadius: BorderRadius.circular(11)), child: Icon(icon, size: 19, color: color)),
           const SizedBox(width: 10),
@@ -402,7 +378,7 @@ class _SummaryCard extends StatelessWidget {
             Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: muted, fontSize: 11, fontWeight: FontWeight.w500)),
           ])),
         ]),
-      );
+      ));
 }
 
 class UserCard extends StatelessWidget {
