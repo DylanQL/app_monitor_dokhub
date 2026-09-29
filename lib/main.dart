@@ -244,8 +244,17 @@ class _UsersPageState extends State<UsersPage> {
 
   Widget _summary() {
     final blocked = _count(UserFilter.bloqueados);
-    final used = _count(UserFilter.usados);
+    final inUseUsers = _users.where((user) => user.enUso).toList();
     final available = _count(UserFilter.disponibles);
+    final hasDuplicateInUse = inUseUsers.length > 1;
+    final inUseValue = hasDuplicateInUse
+        ? 'ERROR'
+        : inUseUsers.isEmpty
+            ? 'Ninguna'
+            : inUseUsers.single.username;
+    final inUseLabel = hasDuplicateInUse
+        ? 'Error: ${inUseUsers.length} cuentas en uso'
+        : 'Cuenta en uso';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 22),
       child: LayoutBuilder(builder: (context, box) {
@@ -253,7 +262,13 @@ class _UsersPageState extends State<UsersPage> {
         final cards = [
           _SummaryCard(label: 'Total usuarios', value: '${_users.length}', icon: Icons.people_alt_outlined, color: blue),
           _SummaryCard(label: 'Disponibles', value: '$available', icon: Icons.check_circle_outline_rounded, color: const Color(0xFF23A26D)),
-          _SummaryCard(label: 'En uso', value: '$used', icon: Icons.schedule_rounded, color: const Color(0xFFEC9B32)),
+          _SummaryCard(
+            label: inUseLabel,
+            value: inUseValue,
+            icon: hasDuplicateInUse ? Icons.error_outline_rounded : Icons.schedule_rounded,
+            color: hasDuplicateInUse ? const Color(0xFFE05B62) : const Color(0xFFEC9B32),
+            valueColor: hasDuplicateInUse ? const Color(0xFFE05B62) : ink,
+          ),
           _SummaryCard(label: 'Bloqueados', value: '$blocked', icon: Icons.block_rounded, color: const Color(0xFFE05B62)),
         ];
         if (compact) {
@@ -350,11 +365,12 @@ class _UsersPageState extends State<UsersPage> {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.label, required this.value, required this.icon, required this.color});
+  const _SummaryCard({required this.label, required this.value, required this.icon, required this.color, this.valueColor = ink});
   final String label;
   final String value;
   final IconData icon;
   final Color color;
+  final Color valueColor;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -364,7 +380,7 @@ class _SummaryCard extends StatelessWidget {
           Container(width: 36, height: 36, decoration: BoxDecoration(color: color.withValues(alpha: .1), borderRadius: BorderRadius.circular(11)), child: Icon(icon, size: 19, color: color)),
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(value, style: const TextStyle(color: ink, fontSize: 20, fontWeight: FontWeight.w800)),
+            Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: valueColor, fontSize: 20, fontWeight: FontWeight.w800)),
             Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: muted, fontSize: 11, fontWeight: FontWeight.w500)),
           ])),
         ]),
