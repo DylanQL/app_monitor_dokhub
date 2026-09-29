@@ -15,3 +15,12 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+
+Desde la raíz del proyecto, ejecuta:
+flutter clean
+flutter pub get
+flutter build apk --release
+
+El APK final estará en:
+build/app/outputs/flutter-apk/app-release.apk
