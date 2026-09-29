@@ -30,7 +30,6 @@ class UserRecord {
   const UserRecord({
     required this.username,
     required this.bloqueado,
-    required this.usado,
     required this.fechaInicio,
     required this.fechaFin,
     required this.horasRealizadas,
@@ -40,7 +39,6 @@ class UserRecord {
 
   final String username;
   final bool bloqueado;
-  final bool usado;
   final String? fechaInicio;
   final String? fechaFin;
   final String? horasRealizadas;
@@ -50,7 +48,6 @@ class UserRecord {
   factory UserRecord.fromJson(Map<String, dynamic> json) => UserRecord(
         username: '${json['username'] ?? 'Sin nombre'}',
         bloqueado: _asBool(json['bloqueado']),
-        usado: _asBool(json['usado']),
         fechaInicio: _asNullableString(json['fecha_inicio']),
         fechaFin: _asNullableString(json['fecha_fin']),
         horasRealizadas: _asNullableString(json['horas_realizadas']),
@@ -59,6 +56,10 @@ class UserRecord {
             : _asBool(json['cumplio_esperadas']),
         tiempoTranscurrido: _asNullableString(json['tiempo_transcurrido']),
       );
+
+  bool get enUso =>
+      fechaInicio != null && fechaInicio!.trim().isNotEmpty &&
+      (fechaFin == null || fechaFin!.trim().isEmpty);
 
   static bool _asBool(dynamic value) =>
       value == true || value?.toString().toLowerCase() == 'true';
@@ -111,7 +112,7 @@ class _UsersPageState extends State<UsersPage> {
     if (_loading) return 'Comprobando';
     if (_error != null) return 'Sin conexión';
     if (_users.isEmpty) return 'Sin usuarios';
-    final allUnavailable = _users.every((user) => user.usado || user.bloqueado);
+    final allUnavailable = _users.every((user) => user.enUso || user.bloqueado);
     return allUnavailable ? 'Sistema caído' : 'Sistema activo';
   }
 
@@ -127,9 +128,9 @@ class _UsersPageState extends State<UsersPage> {
     return _users.where((user) {
       final matchesFilter = switch (_filter) {
         UserFilter.todos => true,
-        UserFilter.usados => user.usado,
+        UserFilter.usados => user.enUso,
         UserFilter.bloqueados => user.bloqueado,
-        UserFilter.disponibles => !user.usado && !user.bloqueado,
+        UserFilter.disponibles => !user.enUso && !user.bloqueado,
       };
       return matchesFilter && user.username.toLowerCase().contains(_search.toLowerCase());
     }).toList();
@@ -137,9 +138,9 @@ class _UsersPageState extends State<UsersPage> {
 
   int _count(UserFilter filter) => _users.where((u) => switch (filter) {
         UserFilter.todos => true,
-        UserFilter.usados => u.usado,
+        UserFilter.usados => u.enUso,
         UserFilter.bloqueados => u.bloqueado,
-        UserFilter.disponibles => !u.usado && !u.bloqueado,
+        UserFilter.disponibles => !u.enUso && !u.bloqueado,
       }).length;
 
   @override
@@ -291,7 +292,7 @@ class _UsersPageState extends State<UsersPage> {
             scrollDirection: Axis.horizontal,
             child: Row(children: [
               _filterChip('Todos', UserFilter.todos),
-              _filterChip('Usados', UserFilter.usados),
+              _filterChip('En uso', UserFilter.usados),
               _filterChip('Bloqueados', UserFilter.bloqueados),
               _filterChip('Disponibles', UserFilter.disponibles),
             ]),
@@ -378,8 +379,8 @@ class UserCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final (status, statusColor, statusIcon) = user.bloqueado
         ? ('Bloqueado', const Color(0xFFE05B62), Icons.block_rounded)
-        : user.usado
-            ? ('Usado', const Color(0xFFEC9B32), Icons.schedule_rounded)
+        : user.enUso
+            ? ('En uso', const Color(0xFFEC9B32), Icons.schedule_rounded)
             : ('Disponible', const Color(0xFF23A26D), Icons.check_circle_outline_rounded);
     return Container(
       padding: const EdgeInsets.all(17),
